@@ -47,6 +47,7 @@ function Utility:TweenObject(obj, properties, duration, ...)
     tween:Create(obj, tweeninfo(duration, ...), properties):Play()
 end
 
+
 local themes = {
     SchemeColor = Color3.fromRGB(74, 99, 135),
     Background = Color3.fromRGB(36, 37, 43),
@@ -119,7 +120,6 @@ local themeStyles = {
         TextColor = Color3.fromRGB(255,255,255),
         ElementColor = Color3.fromRGB(22, 29, 31)
     },
-    -- New themes added below
     Aurora = {
         SchemeColor = Color3.fromRGB(0, 181, 204),
         Background = Color3.fromRGB(10, 25, 47),
@@ -215,19 +215,15 @@ local themeStyles = {
 
 local oldTheme = ""
 
-local SettingsT = {
-
-}
+local SettingsT = {}
 
 local Name = "KavoConfig.JSON"
 
 pcall(function()
-
-if not pcall(function() readfile(Name) end) then
-writefile(Name, game:service'HttpService':JSONEncode(SettingsT))
-end
-
-Settings = game:service'HttpService':JSONEncode(readfile(Name))
+    if not pcall(function() readfile(Name) end) then
+        writefile(Name, game:service'HttpService':JSONEncode(SettingsT))
+    end
+    Settings = game:service'HttpService':JSONEncode(readfile(Name))
 end)
 
 local LibName = tostring(math.random(1, 100))..tostring(math.random(1,50))..tostring(math.random(1, 100))
@@ -244,44 +240,35 @@ function Kavo.CreateLib(kavName, themeList)
     if not themeList then
         themeList = themes
     end
-    if themeList == "DarkTheme" then
-        themeList = themeStyles.DarkTheme
-    elseif themeList == "LightTheme" then
-        themeList = themeStyles.LightTheme
-    elseif themeList == "BloodTheme" then
-        themeList = themeStyles.BloodTheme
-    elseif themeList == "GrapeTheme" then
-        themeList = themeStyles.GrapeTheme
-    elseif themeList == "Ocean" then
-        themeList = themeStyles.Ocean
-    elseif themeList == "Midnight" then
-        themeList = themeStyles.Midnight
-    elseif themeList == "Sentinel" then
-        themeList = themeStyles.Sentinel
-    elseif themeList == "Synapse" then
-        themeList = themeStyles.Synapse
-    elseif themeList == "Serpent" then
-        themeList = themeStyles.Serpent
-    elseif themeList == "Aurora" then
-        themeList = themeStyles.Aurora
-    else
-        if themeList.SchemeColor == nil then
-            themeList.SchemeColor = Color3.fromRGB(74, 99, 135)
-        elseif themeList.Background == nil then
-            themeList.Background = Color3.fromRGB(36, 37, 43)
-        elseif themeList.Header == nil then
-            themeList.Header = Color3.fromRGB(28, 29, 34)
-        elseif themeList.TextColor == nil then
-            themeList.TextColor = Color3.fromRGB(255,255,255)
-        elseif themeList.ElementColor == nil then
-            themeList.ElementColor = Color3.fromRGB(32, 32, 38)
-        end
+    
+    -- Handle theme selection by name
+    if type(themeList) == "string" then
+        themeList = themeStyles[themeList] or themes
+    end
+    
+    -- Fallback to default theme if any required color is missing
+    if themeList.SchemeColor == nil then
+        themeList.SchemeColor = themes.SchemeColor
+    end
+    if themeList.Background == nil then
+        themeList.Background = themes.Background
+    end
+    if themeList.Header == nil then
+        themeList.Header = themes.Header
+    end
+    if themeList.TextColor == nil then
+        themeList.TextColor = themes.TextColor
+    end
+    if themeList.ElementColor == nil then
+        themeList.ElementColor = themes.ElementColor
     end
 
     themeList = themeList or {}
     local selectedTab 
     kavName = kavName or "Library"
     table.insert(Kavo, kavName)
+    
+    -- Clean up any existing UI with the same name
     for i,v in pairs(game.CoreGui:GetChildren()) do
         if v:IsA("ScreenGui") and v.Name == kavName then
             v:Destroy()
@@ -437,13 +424,22 @@ function Kavo.CreateLib(kavName, themeList)
     infoContainer.Size = UDim2.new(0, 368, 0, 33)
 
     
-    coroutine.wrap(function()
+ coroutine.wrap(function()
         while wait() do
             Main.BackgroundColor3 = themeList.Background
             MainHeader.BackgroundColor3 = themeList.Header
             MainSide.BackgroundColor3 = themeList.Header
             coverup_2.BackgroundColor3 = themeList.Header
             coverup.BackgroundColor3 = themeList.Header
+            
+            -- Update text colors for light/dark themes
+            if themeList.SchemeColor == Color3.fromRGB(255,255,255) then
+                Utility:TweenObject(title, {TextColor3 = Color3.fromRGB(0,0,0)}, 0.2)
+            elseif themeList.SchemeColor == Color3.fromRGB(0,0,0) then
+                Utility:TweenObject(title, {TextColor3 = Color3.fromRGB(255,255,255)}, 0.2)
+            else
+                title.TextColor3 = themeList.TextColor
+            end
         end
     end)()
 
